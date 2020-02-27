@@ -12,45 +12,30 @@ const cookieParser = require('cookie-parser');
 
 
 // web3 config
+web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
 
-App.web3Provider = new Web3.providers.HttpProvider('http://localhost:7545');
-ethereum.enable();
-web3 = new Web3(App.web3Provider);
-
-web3.eth.getCoinbase(function(err, account) {
-  if (err === null) {
-    App.account = account;
-  }
-});
-coinbase = "0x0746b306b201889498da9c69963f42d5b01f864f";
-var contractAddress = "0xdbc7ff572a0c0697a53e97179a16b8dc9c81427f";
+coinbase = "0xdca007fC4cd6A0bCD046aC336142e03d6B4EB8c4";
+var contractAddress = "0x953e80A3f65389868b47B1d78Ab37C38e7B60496";
 
 var contractAbi = [
   {
-    "constant": true,
-    "inputs":[],
-    "name": "getResult",
-    "outputs": [
+    "constant" : false,
+    "inputs": [
       {
-        "name": "_id",
-        "type": "uint",
-      },
-      {
-        "name": "_name",
-        "type": "string",
-      },
-      {
-        "name": "_voteCount",
-        "type": "uint",
+        "name": "_candidateId",
+        "type": "uint"
       }
     ],
+    "name": "vote",
+    "output": [],
     "payable": false,
-    "stateMutability": "view",
+    "stateMutability": "nonpayable",
     "type": "function"
   }
+ 
 ];
 
-Democracy = new web3.eth.Contract(contractAbi, contractAddress);
+Election = new web3.eth.Contract(contractAbi, contractAddress);
 
 app.use(express.json());
 
@@ -172,7 +157,7 @@ function ensureAuthenticated(req, res, next) {
 //GET Dashboard
 app.get('/dashboard',ensureAuthenticated, (req,res) => res.sendFile(path.join(__dirname,'front-end','dashboard.html')));
 
-// app.get('/vote', (req,res) => res.sendFile(path.join(__dirname,'blockchain','src/index.html')) );
+
 
 //login
 
@@ -191,5 +176,19 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
+
+app.post('/dashboard', (req,res) => {
+
+  data = req.body;
+  
+  Election.methods.vote(
+    data.Candidate
+    ).send({ from:coinbase, gas: 600000}).catch((error)=>{
+      console.log(error)
+      });
+  
+  res.send('Success');
+ 
+});
     
 module.exports = app;
